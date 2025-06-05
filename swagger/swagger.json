@@ -1,0 +1,184 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Swing Notes API",
+    "version": "1.0.0",
+    "description": "API för att hantera användare och anteckningar i Swing Notes-projektet."
+  },
+  "paths": {
+    "/api/user/signup": {
+      "post": {
+        "tags": ["Användare"],
+        "summary": "Skapa användare",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Konto skapat" },
+          "500": { "description": "Serverfel" }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "tags": ["Användare"],
+        "summary": "Logga in",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Inloggning lyckades, JWT returneras" },
+          "401": { "description": "Felaktigt användarnamn eller lösenord" }
+        }
+      }
+    },
+    "/api/notes": {
+      "get": {
+        "tags": ["Anteckningar"],
+        "summary": "Hämta alla anteckningar",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Anteckningar hämtade" },
+          "401": { "description": "Obehörig" }
+        }
+      },
+      "post": {
+        "tags": ["Anteckningar"],
+        "summary": "Skapa ny anteckning",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "maxLength": 50 },
+                  "text": { "type": "string", "maxLength": 300 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Anteckning skapad" },
+          "400": { "description": "Felaktig input" },
+          "401": { "description": "Obehörig" }
+        }
+      }
+    },
+    "/api/notes/{id}": {
+      "put": {
+        "tags": ["Anteckningar"],
+        "summary": "Uppdatera anteckning",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "maxLength": 50 },
+                  "text": { "type": "string", "maxLength": 300 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Anteckning uppdaterad" },
+          "400": { "description": "Felaktig input" },
+          "404": { "description": "Anteckning hittades inte" },
+          "401": { "description": "Obehörig" }
+        }
+      },
+      "delete": {
+        "tags": ["Anteckningar"],
+        "summary": "Radera anteckning",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Anteckning raderad" },
+          "404": { "description": "Anteckning hittades inte" },
+          "401": { "description": "Obehörig" }
+        }
+      }
+    },
+    "/api/notes/search": {
+      "get": {
+        "tags": ["Anteckningar"],
+        "summary": "Sök anteckningar via titel",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Sökresultat returnerat" },
+          "401": { "description": "Obehörig" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Användare",
+      "description": "Registrering och inloggning"
+    },
+    {
+      "name": "Anteckningar",
+      "description": "CRUD och sökfunktion för anteckningar"
+    }
+  ]
+}

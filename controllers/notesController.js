@@ -1,0 +1,82 @@
+import pool from '../models/db.js';
+
+export const getNotes = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM notes WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Kunde inte hämta anteckningar' });
+  }
+};
+
+export const createNote = async (req, res) => {
+  const { title, text } = req.body;
+  if (!title || title.length > 50 || text?.length > 300) {
+    return res.status(400).json({ error: 'Ogiltig data' });
+  }
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO notes (user_id, title, text) VALUES ($1, $2, $3) RETURNING *',
+      [req.user.id, title, text]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Kunde inte spara anteckning' });
+  }
+};
+
+export const updateNote = async (req, res) => {
+  const { id } = req.params;
+  const { title, text } = req.body;
+  if (!title || title.length > 50 || text?.length > 300) {
+    return res.status(400).json({ error: 'Ogiltig data' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE notes
+       SET title = $1, text = $2, modified_at = CURRENT_TIMESTAMP
+       WHERE id = $3 AND user_id = $4
+       RETURNING *`,
+      [title, text, id, req.user.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Anteckning hittades inte' });
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Kunde inte uppdatera anteckning' });
+  }
+};
+
+export const deleteNote = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'DELETE FROM notes WHERE id = $1 AND user_id = $2 RETURNING *',
+      [id, req.user.id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Anteckning hittades inte' });
+
+    res.json({ message: 'Anteckning raderad' });
+  } catch (error) {
+    res.status(500).json({ error: 'Kunde inte radera anteckning' });
+  }
+};
+
+export const searchNotes = async (req, res) => {
+  const { q } = req.query;
+  try {
+    const result = await pool.query(
+      `SELECT * FROM notes
+       WHERE user_id = $1 AND title ILIKE $2`,
+      [req.user.id, `%${q}%`]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Kunde inte söka anteckningar' });
+  }
+};
