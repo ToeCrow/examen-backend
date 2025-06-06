@@ -26,11 +26,16 @@ const NavigationBar: React.FC = () => {
             {isAuthenticated && <Nav.Link as={Link} to="/search">Sök</Nav.Link>}
             <Nav.Link href="http://localhost:3000/api-docs" target="_blank">Swagger</Nav.Link>
           </Nav>
-          <Nav className="ml-auto">
+          <Nav className="ms-auto">
             {!isAuthenticated ? (
-              <Nav.Link as={Link} to="/login" className="btn btn-outline-primary">
-                Logga in
-              </Nav.Link>
+              <>
+                <Nav.Link as={Link} to="/login" className="btn btn-outline-primary me-2">
+                  Logga in
+                </Nav.Link>
+                <Nav.Link as={Link} to="/signup" className="btn btn-outline-secondary">
+                  Skapa konto
+                </Nav.Link>
+              </>
             ) : (
               <Button variant="outline-danger" onClick={handleLogout}>Logga ut</Button>
             )}

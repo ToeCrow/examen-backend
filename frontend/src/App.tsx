@@ -9,6 +9,7 @@ import Notes from './pages/Notes';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
 import SearchNotes from './pages/SearchNotes';
+import SignupPage from './pages/SignupPage';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route element={<PrivateRoute />}>
               <Route path="/notes" element={<Notes />} />
               <Route path="/search" element={<SearchNotes />} />
