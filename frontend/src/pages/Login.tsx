@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, Alert } from 'react-bootstrap';
-import { loginUser } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -13,16 +13,29 @@ const Login: React.FC = () => {
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/notes';
 
+  const { login } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const data = await loginUser(username, password);
-      localStorage.setItem('token', data.token);
+      const res = await fetch('http://localhost:3000/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) {
+        setError('Fel användarnamn eller lösenord');
+        return;
+      }
+
+      const data = await res.json();
+      login(data.token); // Uppdaterar context
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || 'Något gick fel, försök igen');
+    } catch (err) {
+      setError('Något gick fel, försök igen');
     }
   };
 
