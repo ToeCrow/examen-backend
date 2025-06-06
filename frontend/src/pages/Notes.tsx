@@ -1,110 +1,83 @@
-import { useEffect, useState } from "react";
-import API from "../api/client";
-import NoteCard from "../components/NoteCard";
+// src/pages/Notes.tsx
 
-type Note = {
+import { useEffect, useState } from "react";
+
+interface Note {
   id: string;
   title: string;
   text: string;
   createdAt: string;
   modifiedAt: string;
-};
+}
 
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
-  const [search, setSearch] = useState("");
-
-  const fetchNotes = async () => {
-    try {
-      const res = await API.get("/notes");
-      setNotes(res.data);
-    } catch {
-      alert("Kunde inte hämta anteckningar.");
-    }
-  };
-
-  const createNote = async () => {
-    if (!title || !text) return alert("Fyll i titel och text.");
-    await API.post("/notes", { title, text });
-    setTitle("");
-    setText("");
-    fetchNotes();
-  };
-
-  const deleteNote = async (id: string) => {
-    await API.delete(`/notes/${id}`);
-    fetchNotes();
-  };
-
-  const updateNote = async (id: string, newTitle: string, newText: string) => {
-    await API.put(`/notes`, { id, title: newTitle, text: newText });
-    fetchNotes();
-  };
-
-  const handleSearch = async () => {
-    try {
-      const res = await API.get(`/notes/search?q=${search}`);
-      setNotes(res.data);
-    } catch {
-      alert("Sökning misslyckades.");
-    }
-  };
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/notes", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Du är inte inloggad. Logga in för att se dina anteckningar.");
+          } else {
+            throw new Error(`Fel vid hämtning av anteckningar: ${response.status} ${response.statusText}`);
+          }
+        }
+
+        const data = await response.json();
+        setNotes(data);
+      } catch (error: any) {
+        console.error("Error fetching notes:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchNotes();
   }, []);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl mb-4 font-semibold">Mina anteckningar</h1>
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-center">Mina Anteckningar</h1>
 
-      <div className="flex gap-2 mb-4">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Sök på titel"
-          className="border p-2 flex-1 rounded"
-        />
-        <button onClick={handleSearch} className="bg-blue-500 text-white px-4 rounded">
-          Sök
-        </button>
-      </div>
+      {loading && (
+        <div className="text-center text-gray-500">Laddar anteckningar...</div>
+      )}
 
-      <div className="mb-6">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titel"
-          className="p-2 border rounded w-full mb-2"
-          maxLength={50}
-        />
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Text"
-          className="p-2 border rounded w-full mb-2"
-          maxLength={300}
-        />
-        <button
-          onClick={createNote}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Spara anteckning
-        </button>
-      </div>
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 mb-4 rounded text-center">
+          {error}
+        </div>
+      )}
 
-      <ul className="space-y-3">
+      {!loading && !error && notes.length === 0 && (
+        <div className="text-center text-gray-600">Inga anteckningar hittades.</div>
+      )}
+
+      <div className="space-y-4">
         {notes.map((note) => (
-          <NoteCard
+          <div
             key={note.id}
-            note={note}
-            onDelete={deleteNote}
-            onUpdate={updateNote}
-          />
+            className="border border-gray-300 p-4 rounded shadow-sm hover:shadow-md transition"
+          >
+            <h2 className="text-xl font-semibold mb-2">{note.title}</h2>
+            <p className="mb-2">{note.text}</p>
+            <div className="text-sm text-gray-500">
+              Skapad: {new Date(note.createdAt).toLocaleString()} <br />
+              Senast ändrad: {new Date(note.modifiedAt).toLocaleString()}
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

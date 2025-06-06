@@ -17,6 +17,12 @@ app.use(express.json());
 
 app.use('/api/user', userRoutes);
 app.use('/api/notes', notesRoutes);
+
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocument);
+});
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const PORT = process.env.PORT || 3000;

@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Notes from "./pages/Notes";
-import SwaggerDocs from "./components/SwaggerDocs";
 
 export default function App() {
   return (
@@ -16,7 +15,6 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/notes" element={<Notes />} />
-          <Route path="/docs" element={<SwaggerDocs />} />
         </Route>
       </Routes>
     </BrowserRouter>

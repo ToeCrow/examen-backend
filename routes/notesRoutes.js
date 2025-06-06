@@ -17,6 +17,6 @@ router.get('/', getNotes);
 router.post('/', createNote);
 router.put('/:id', updateNote);
 router.delete('/:id', deleteNote);
-router.get('/search', searchNotes); // VG-krav
+router.get('/search', searchNotes); 
 
 export default router;
