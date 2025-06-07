@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import userRoutes from './routes/userRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
+import groupRoutes from './routes/groupRoutes.js';
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 
@@ -17,7 +18,9 @@ app.use(express.json());
 
 app.use('/api/user', userRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/groups', groupRoutes);
 
+// To be able to show in frontend
 app.get('/api-docs/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerDocument);

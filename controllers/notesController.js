@@ -80,3 +80,21 @@ export const searchNotes = async (req, res) => {
     res.status(500).json({ error: 'Kunde inte söka anteckningar' });
   }
 };
+
+export const getGroupNotes = async (req, res) => {
+  const { groupId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT n.* FROM notes n
+       JOIN users u ON n.user_id = u.id
+       JOIN group_members gm ON gm.user_id = u.id
+       WHERE gm.group_id = $1
+       ORDER BY n.created_at DESC`,
+      [groupId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Could not fetch group notes' });
+  }
+};
