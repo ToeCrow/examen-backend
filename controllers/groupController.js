@@ -23,7 +23,7 @@ export const createGroup = async (req, res) => {
   } catch (error) {
     await client.query('ROLLBACK');
     console.error(error);
-    res.status(500).json({ error: 'Could not create group' });
+    res.status(500).json({ error: 'Kunde inte skapa grupp' });
   } finally {
     client.release();
   }
@@ -37,28 +37,10 @@ export const addUserToGroup = async (req, res) => {
   'INSERT INTO group_members (group_id, user_id, role_id) VALUES ($1, $2, $3)',
   [groupId, userId, 2] // 2 = member
 );
-    res.status(201).json({ message: 'User added to group' });
+    res.status(201).json({ message: 'Användare lades till grupp' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Could not add user to group' });
-  }
-};
-
-export const getGroupNotes = async (req, res) => {
-  const { groupId } = req.params;
-  try {
-    const result = await pool.query(
-      `SELECT n.* FROM notes n
-       JOIN users u ON n.user_id = u.id
-       JOIN group_members gm ON gm.user_id = u.id
-       WHERE gm.group_id = $1
-       ORDER BY n.created_at DESC`,
-      [groupId]
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Could not fetch group notes' });
+    res.status(500).json({ error: 'Kunde inte lägga till användare i grupp' });
   }
 };
 
@@ -70,10 +52,10 @@ export const createGroupInvite = async (req, res) => {
        VALUES ($1, $2, $3)`,
       [groupId, invitedUserId, invitedByUserId]
     );
-    res.status(201).json({ message: 'Invite sent' });
+    res.status(201).json({ message: 'Inbjudan skickad' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Could not send invite' });
+    res.status(500).json({ error: 'Kunde inte skicka inbjudan' });
   }
 };
 
@@ -87,13 +69,13 @@ export const promoteToAdmin = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'User not found in group' });
+      return res.status(404).json({ error: 'Användare finns inte i gruppen' });
     }
 
-    res.status(200).json({ message: 'User promoted to admin' });
+    res.status(200).json({ message: 'User promoterad till admin' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Could not promote user' });
+    res.status(500).json({ error: 'Kunde inte promotera till admin' });
   }
 };
 
@@ -112,7 +94,7 @@ export const leaveGroup = async (req, res) => {
 
     if (userRoleResult.rowCount === 0) {
       await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'User not found in group' });
+      return res.status(404).json({ error: 'Användare finns inte i gruppen' });
     }
 
     const isAdmin = userRoleResult.rows[0].role_id === 1;
