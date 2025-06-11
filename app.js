@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/user', userRoutes);
+app.use('/api/user', userRoutes);  // skulle varit ett s på slutet, men skapar mer fel än jag vill ha just nu, så vi låter det vara så länge
 app.use('/api/notes', notesRoutes);
 app.use('/api/groups', groupRoutes);
 

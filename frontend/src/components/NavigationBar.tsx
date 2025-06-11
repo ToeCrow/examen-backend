@@ -1,13 +1,30 @@
 // src/components/NavigationBar.tsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getMe } from '../utils/api';
 
 const NavigationBar: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getMe();
+        setUsername(user.username);
+      } catch {
+        setUsername(null);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchUser();
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -37,7 +54,14 @@ const NavigationBar: React.FC = () => {
                 </Nav.Link>
               </>
             ) : (
-              <Button variant="outline-danger" onClick={handleLogout}>Logga ut</Button>
+              <>
+                {username && (
+                  <Navbar.Text className="me-3">
+                    <strong>{username}</strong>
+                  </Navbar.Text>
+                )}
+                <Button variant="outline-danger" onClick={handleLogout}>Logga ut</Button>
+              </>
             )}
           </Nav>
         </Navbar.Collapse>
