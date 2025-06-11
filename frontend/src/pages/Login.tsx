@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, Alert } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { loginUser } from '../utils/api';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -20,22 +21,12 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:3000/api/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!res.ok) {
-        setError('Fel användarnamn eller lösenord');
-        return;
-      }
-
-      const data = await res.json();
-      login(data.token); // Uppdaterar context
+      const data = await loginUser(username, password);
+      // Viktigt: skicka både accessToken och refreshToken till login-funktionen
+      login(data.accessToken, data.refreshToken);
       navigate(from, { replace: true });
-    } catch (err) {
-      setError('Något gick fel, försök igen');
+    } catch (err: any) {
+      setError(err.message || 'Fel användarnamn eller lösenord');
     }
   };
 
