@@ -21,21 +21,31 @@ export const getNoteById = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Note not found' });
+      return res.status(404).json({ error: 'Hittade ingen anteckning med detta id' });
     }
 
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Could not fetch note' });
+    res.status(500).json({ error: 'Kunde inte hämte anteckning' });
   }
 };
 
 
 export const createNote = async (req, res) => {
   const { title, text } = req.body;
-  if (!title || title.length > 50 || text?.length > 300) {
-    return res.status(400).json({ error: 'Ogiltig data' });
+  
+  // Validating title
+  if (!title) {
+    return res.status(400).json({ error: 'Titel krävs för att kunna söka bland anteckningar.' });
+  }
+  if (title.length > 50) {
+    return res.status(400).json({ error: 'Titel får vara max 50 tecken lång.' });
+  }
+
+  // Validating text
+  if (text && text.length > 300) {
+    return res.status(400).json({ error: 'Text får vara max 300 tecken lång.' });
   }
 
   try {
@@ -52,8 +62,18 @@ export const createNote = async (req, res) => {
 export const updateNote = async (req, res) => {
   const { id } = req.params;
   const { title, text } = req.body;
-  if (!title || title.length > 50 || text?.length > 300) {
-    return res.status(400).json({ error: 'Ogiltig data' });
+
+  // Validating title
+  if (!title) {
+    return res.status(400).json({ error: 'Titel krävs för att kunna söka bland anteckningar.' });
+  }
+  if (title.length > 50) {
+    return res.status(400).json({ error: 'Titel får vara max 50 tecken lång.' });
+  }
+
+  // Validating text
+  if (text && text.length > 300) {
+    return res.status(400).json({ error: 'Text får vara max 300 tecken lång.' });
   }
 
   try {
@@ -115,6 +135,6 @@ export const getGroupNotes = async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Could not fetch group notes' });
+    res.status(500).json({ error: 'Kunde inte hämta anteckningar från din grupp' });
   }
 };
