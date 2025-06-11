@@ -46,8 +46,13 @@ export const createNote = async (title: string, text: string) => {
     body: JSON.stringify({ title, text }),
   });
 
-  if (!res.ok) throw new Error('Kunde inte skapa anteckning');
-  return await res.json();
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data?.error || 'Kunde inte skapa anteckning');
+  }
+
+  return data
 };
 
 export const updateNote = async (id: string, title: string, text: string) => {

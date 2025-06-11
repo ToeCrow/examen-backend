@@ -69,17 +69,37 @@ const Notes: React.FC = () => {
   };
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle || !newText) return;
-    try {
-      const created = await createNote(newTitle, newText);
-      setNotes([created, ...notes]);
-      setNewTitle('');
-      setNewText('');
-    } catch {
-      setError('Kunde inte skapa anteckning');
-    }
-  };
+  e.preventDefault();
+  setError(''); // Nollställ gammalt fel
+  
+  if (!newTitle) {
+    setError('Titel krävs för att kunna söka bland anteckningar.');
+    return;
+  }
+  
+  if (newTitle.length > 50) {
+    setError('Titel får vara max 50 tecken lång.');
+    return;
+  }
+  
+  if (newText && newText.length > 300) {
+    setError('Text får vara max 300 tecken lång.');
+    return;
+  }
+
+  try {
+    const created = await createNote(newTitle, newText);
+    setNotes([created, ...notes]);
+    setNewTitle('');
+    setNewText('');
+  } catch (err: any) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError('Kunde inte skapa anteckning');
+  }
+}
+};
 
   return (
     <>
@@ -92,10 +112,9 @@ const Notes: React.FC = () => {
           <Form.Label>Titel</Form.Label>
           <Form.Control
             type="text"
-            maxLength={50}
+            maxLength={500}
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
-            required
           />
         </Form.Group>
         <Form.Group className="mb-2" controlId="newText">
@@ -106,7 +125,6 @@ const Notes: React.FC = () => {
             maxLength={300}
             value={newText}
             onChange={e => setNewText(e.target.value)}
-            required
           />
         </Form.Group>
         <Button type="submit">Skapa</Button>
