@@ -1,8 +1,9 @@
 // src/pages/Notes.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Form, ListGroup, Modal, Alert } from 'react-bootstrap';
-import { fetchNotes, createNote, updateNote, deleteNote } from '../utils/api';
+import debounce from 'lodash/debounce';
+import { fetchNotes, createNote, updateNote, deleteNote, searchNotes } from '../utils/api';
 
 interface Note {
   id: string;
@@ -14,10 +15,12 @@ interface Note {
 
 const Notes: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [searchResults, setSearchResults] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [newTitle, setNewTitle] = useState('');
   const [newText, setNewText] = useState('');
@@ -31,6 +34,7 @@ const Notes: React.FC = () => {
     try {
       const data = await fetchNotes();
       setNotes(data);
+      setSearchResults(data);
     } catch {
       setError('Kunde inte ladda anteckningar');
     } finally {
@@ -38,10 +42,38 @@ const Notes: React.FC = () => {
     }
   };
 
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(notes);
+      return;
+    }
+
+    try {
+      const data = await searchNotes(query);
+      setSearchResults(data);
+    } catch {
+      setError('Kunde inte söka anteckningar');
+    }
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
+      performSearch(query);
+    }, 500),
+    [notes]
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return debouncedSearch.cancel;
+  }, [searchQuery, debouncedSearch]);
+
   const handleDelete = async (id: string) => {
     try {
       await deleteNote(id);
-      setNotes(notes.filter(n => n.id !== id));
+      const updatedNotes = notes.filter(n => n.id !== id);
+      setNotes(updatedNotes);
+      setSearchResults(updatedNotes);
     } catch {
       setError('Kunde inte ta bort anteckningen');
     }
@@ -61,7 +93,9 @@ const Notes: React.FC = () => {
     if (!editingNote) return;
     try {
       const updated = await updateNote(editingNote.id, editingNote.title, editingNote.text);
-      setNotes(notes.map(n => (n.id === updated.id ? updated : n)));
+      const updatedNotes = notes.map(n => (n.id === updated.id ? updated : n));
+      setNotes(updatedNotes);
+      setSearchResults(updatedNotes);
       closeModal();
     } catch {
       setError('Kunde inte uppdatera anteckningen');
@@ -69,42 +103,52 @@ const Notes: React.FC = () => {
   };
 
   const handleCreate = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError(''); // Nollställ gammalt fel
-  
-  if (!newTitle) {
-    setError('Titel krävs för att kunna söka bland anteckningar.');
-    return;
-  }
-  
-  if (newTitle.length > 50) {
-    setError('Titel får vara max 50 tecken lång.');
-    return;
-  }
-  
-  if (newText && newText.length > 300) {
-    setError('Text får vara max 300 tecken lång.');
-    return;
-  }
+    e.preventDefault();
+    setError('');
 
-  try {
-    const created = await createNote(newTitle, newText);
-    setNotes([created, ...notes]);
-    setNewTitle('');
-    setNewText('');
-  } catch (err: any) {
-  if (err instanceof Error) {
-    setError(err.message);
-  } else {
-    setError('Kunde inte skapa anteckning');
-  }
-}
-};
+    if (!newTitle.trim()) {
+      setError('Titel krävs för att skapa en anteckning.');
+      return;
+    }
+
+    if (newTitle.length > 50) {
+      setError('Titel får vara max 50 tecken lång.');
+      return;
+    }
+
+    if (newText.length > 300) {
+      setError('Text får vara max 300 tecken lång.');
+      return;
+    }
+
+    try {
+      const created = await createNote(newTitle, newText);
+      const updatedNotes = [created, ...notes];
+      setNotes(updatedNotes);
+      setSearchResults(updatedNotes);
+      setNewTitle('');
+      setNewText('');
+    } catch (err: any) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Kunde inte skapa anteckning');
+      }
+    }
+  };
 
   return (
     <>
       <h2>Dina Anteckningar</h2>
       {error && <Alert variant="danger">{error}</Alert>}
+
+      <Form.Control
+        type="text"
+        placeholder="Sök bland anteckningar..."
+        className="mb-4"
+        value={searchQuery}
+        onChange={e => setSearchQuery(e.target.value)}
+      />
 
       <Form onSubmit={handleCreate} className="mb-4">
         <h4>Skapa ny anteckning</h4>
@@ -112,7 +156,7 @@ const Notes: React.FC = () => {
           <Form.Label>Titel</Form.Label>
           <Form.Control
             type="text"
-            maxLength={500}
+            maxLength={50}
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
           />
@@ -132,17 +176,17 @@ const Notes: React.FC = () => {
 
       {loading ? (
         <div>Laddar...</div>
-      ) : notes.length === 0 ? (
-        <div>Inga anteckningar ännu.</div>
+      ) : searchResults.length === 0 ? (
+        <div>Inga anteckningar hittades.</div>
       ) : (
         <ListGroup>
-          {notes.map(note => (
+          {searchResults.map(note => (
             <ListGroup.Item key={note.id} className="d-flex justify-content-between align-items-start">
               <div>
                 <strong>{note.title}</strong>
                 <div>{note.text}</div>
                 <small className="text-muted">
-                  {note.modified_at
+                  {note.modified_at && note.modified_at !== note.created_at
                     ? `Redigerad: ${new Date(note.modified_at).toLocaleString()}`
                     : `Skapad: ${new Date(note.created_at).toLocaleString()}`}
                 </small>

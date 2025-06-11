@@ -6,26 +6,24 @@ import {
   updateNote,
   deleteNote,
   searchNotes,
-  getGroupNotes // lägg till importen
+  getGroupNotes
 } from '../controllers/notesController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Alla routes kräver auth
+// All routes requires auth
 router.use(authenticateToken);
 
-// CRUD för vanliga notes
+// Specific routes  
+router.get('/search', searchNotes);
+router.get('/group/:groupId', getGroupNotes);
+
+// CRUD for notes
 router.post('/', createNote);
 router.get('/', getNotes);
-router.get('/:id', getNoteById);
+router.get('/:id', getNoteById);      // Sista GET-routen med :id
 router.put('/:id', updateNote);
 router.delete('/:id', deleteNote);
-
-// Sök notes
-router.get('/search/query', searchNotes);
-
-// 🆕 Hämta notes för en grupp
-router.get('/group/:groupId', getGroupNotes);
 
 export default router;
