@@ -1,5 +1,3 @@
-// src/utils/api.ts
-
 export const API_BASE = 'http://localhost:3000/api';
 
 export const getAuthHeaders = () => {
@@ -19,7 +17,7 @@ export const loginUser = async (username: string, password: string) => {
     throw new Error(error?.error || 'Fel vid inloggning');
   }
 
-  return await res.json(); // { token, refreshToken }
+  return await res.json(); // { accessToken, refreshToken }
 };
 
 export const refreshAccessToken = async () => {
@@ -29,54 +27,68 @@ export const refreshAccessToken = async () => {
   const res = await fetch(`${API_BASE}/user/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),  // <-- Skicka i body!
+    body: JSON.stringify({ refreshToken }),  // Skickas i body
   });
 
   if (!res.ok) throw new Error('Kunde inte förnya token');
 
   const data = await res.json(); // { token }
-  localStorage.setItem('token', data.token); // <-- använd data.token
+  localStorage.setItem('token', data.token);
   return data.token;
 };
 
-
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  let token = localStorage.getItem('token');
+export async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('token');
   const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   };
 
-  let res = await fetch(url, { ...options, headers });
+  const res = await fetch(url, { ...options, headers });
 
-  if (res.status === 401) {
-    // Försök förnya token
-    try {
-      token = await refreshAccessToken();
-    } catch {
-      // Refresh token fungerade inte, kasta error så frontend kan logga ut
-      throw new Error('Sessionen har gått ut');
+  if (res.status === 401 || res.status === 403) {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      const refreshRes = await fetch(`${API_BASE}/user/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (refreshRes.ok) {
+        const { token: newToken } = await refreshRes.json();
+        localStorage.setItem('token', newToken);
+
+        const retryRes = await fetch(url, {
+          ...options,
+          headers: {
+            ...headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        });
+
+        if (!retryRes.ok) {
+          throw new Error('Misslyckades att hämta data efter token-uppdatering');
+        }
+
+        return await retryRes.json();
+      } else {
+        throw new Error('Kunde inte uppdatera token');
+      }
     }
-
-    // Försök igen med ny token
-    const newHeaders = {
-      ...headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    res = await fetch(url, { ...options, headers: newHeaders });
   }
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData?.error || 'Något gick fel');
+    throw new Error(`Fetch misslyckades: ${res.status}`);
   }
 
-  return res.json();
-};
+  return await res.json();
+}
 
-// Nu omdefiniera dina API-anrop så de använder fetchWithAuth:
+// API-anrop som använder fetchWithAuth:
 
 export const fetchNotes = async () => {
   return await fetchWithAuth(`${API_BASE}/notes`);

@@ -6,7 +6,7 @@ const createAccessToken = (user) => {
   return jwt.sign(
     { id: user.id, username: user.username },
     process.env.JWT_SECRET,
-    { expiresIn: '5m' }
+    { expiresIn: '15m' } // för test, ändra senare
   );
 };
 
@@ -14,7 +14,7 @@ const createRefreshToken = (user) => {
   return jwt.sign(
     { id: user.id, username: user.username },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '7d' } // för test, ändra senare
   );
 };
 
@@ -56,13 +56,22 @@ export const login = async (req, res) => {
 export const refreshAccessToken = (req, res) => {
   const { refreshToken } = req.body;
 
-  if (!refreshToken) return res.status(401).json({ error: 'Refresh token saknas' });
+  if (!refreshToken) {
+    return res.status(401).json({ error: 'Refresh token saknas' });
+  }
 
   jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Ogiltig refresh token' });
+    if (err) {
+      return res.status(403).json({ error: 'Ogiltig refresh token' });
+    }
 
-    const newAccessToken = createAccessToken(user);
-    res.json({ token: newAccessToken });  // <-- ändra till token
+    const newAccessToken = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '10s' }
+    );
+
+    res.json({ accessToken: newAccessToken });
   });
 };
 
