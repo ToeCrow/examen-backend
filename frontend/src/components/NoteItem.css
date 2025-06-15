@@ -1,0 +1,14 @@
+.note-item {
+  margin-bottom: 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.note-clickable {
+  flex: 1;
+  cursor: pointer;
+}
+
+.note-item:hover {
+  background-color: #f8f9fa;
+}

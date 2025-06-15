@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useAuth } from './AuthContext';
-import { setLogoutMessage } from '../store/notificationSlice';
+import { setLogoutMessage } from '../features/notificatons/notificationSlice';
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 min
 const REFRESH_INTERVAL   = 14 * 60 * 1000 + 59 * 1000; // 14 min 59 s

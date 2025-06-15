@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { loginUser } from '../utils/api';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import { clearLogoutMessage, setLogoutMessage } from '../store/notificationSlice';
+import { clearLogoutMessage, setLogoutMessage } from '../features/notificatons/notificationSlice';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
