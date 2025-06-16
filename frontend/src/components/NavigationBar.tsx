@@ -40,7 +40,7 @@ const NavigationBar: React.FC = () => {
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
             {isAuthenticated && <Nav.Link as={Link} to="/notes">Anteckningar</Nav.Link>}
-            {isAuthenticated && <Nav.Link as={Link} to="/search">Sök</Nav.Link>}
+            {isAuthenticated && <Nav.Link as={Link} to="/board">Planera</Nav.Link>}
             <Nav.Link href="http://localhost:3000/api-docs" target="_blank">Swagger</Nav.Link>
           </Nav>
           <Nav className="ms-auto">

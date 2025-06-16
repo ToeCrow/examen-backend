@@ -4,11 +4,11 @@ import NavigationBar from './components/NavigationBar';
 import Home        from './pages/Home';
 import Login       from './pages/Login';
 import Notes       from './pages/Notes';
-import SearchNotes from './pages/SearchNotes';
 import SignupPage  from './pages/SignupPage';
 import PrivateRoute  from './components/PrivateRoute';
 import { AuthProvider }  from './context/AuthContext';
 import AutoLogoutHandler from './context/AutoLogoutHandler';
+import BoardView from './pages/BoardView';
 
 const App: React.FC = () => (
   <AuthProvider>
@@ -25,7 +25,7 @@ const App: React.FC = () => (
           {/* Protected routes */}
           <Route element={<PrivateRoute />}>
             <Route path="/notes"  element={<Notes />} />
-            <Route path="/search" element={<SearchNotes />} />
+            <Route path="/board" element={<BoardView />} />
           </Route>
           
           {/* Fallback: */}
