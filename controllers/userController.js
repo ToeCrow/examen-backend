@@ -29,6 +29,10 @@ export const signup = async (req, res) => {
     res.status(201).json({ message: 'Konto skapat', user: result.rows[0] });
   } catch (error) {
     console.error(error);
+    if (error.code === '23505') {
+      // 23505 = unique_violation in Postgres
+      return res.status(400).json({ error: 'Användarnamnet finns redan' });
+    }
     res.status(500).json({ error: 'Serverfel vid skapande av användare' });
   }
 };
