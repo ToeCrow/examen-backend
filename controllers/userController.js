@@ -6,7 +6,7 @@ const createAccessToken = (user) => {
   return jwt.sign(
     { id: user.id, username: user.username },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' } // för test, ändra senare
+    { expiresIn: '15m' }
   );
 };
 
@@ -14,7 +14,7 @@ const createRefreshToken = (user) => {
   return jwt.sign(
     { id: user.id, username: user.username },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' } // för test, ändra senare
+    { expiresIn: '7d' } 
   );
 };
 
@@ -29,8 +29,8 @@ export const signup = async (req, res) => {
     res.status(201).json({ message: 'Konto skapat', user: result.rows[0] });
   } catch (error) {
     console.error(error);
+    // 23505 = unique_violation in Postgres
     if (error.code === '23505') {
-      // 23505 = unique_violation in Postgres
       return res.status(400).json({ error: 'Användarnamnet finns redan' });
     }
     res.status(500).json({ error: 'Serverfel vid skapande av användare' });
